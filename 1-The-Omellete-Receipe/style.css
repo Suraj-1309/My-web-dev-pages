@@ -1,0 +1,116 @@
+body{
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(245, 238, 227);
+    font-family: sans-serif;
+}
+
+.main{
+    width: 90%;
+    max-width: 650px;
+    background-color: white;
+    border-radius: 20px;  
+    margin-top: 60px;
+    margin-bottom: 60px;
+    padding: 25px; 
+}
+
+.main .img img{
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+}
+
+.main h1{
+    margin: 0;
+    padding: 20px 0 20px 0;
+    text-align: left;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+    font-size: 45px;
+}
+
+.main p{
+    margin: 0px;
+}
+
+.main .Time{
+    background-color: hsl(330, 100%, 98%);
+    border-radius: 20px;
+    
+}
+
+.main .Time h2{
+   color: hsl(332, 51%, 32%);
+   font-size: larger;
+   padding: 20px 0px 0px 20px;
+}
+
+.main .Time li{
+    padding : 7px 25px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.main .Ingredients{
+    margin-top: 10px;
+}
+
+.main .nutrition p{
+    padding-bottom: 15px;
+}
+
+
+.main .nutrition .outer-t{
+    padding: 5px 0px 5px 25px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.outer-t .lin{
+    width: 50%;
+    font-size: larger;
+}
+
+.outer-t .rin{
+    width: 50%;
+    color:hsl(332, 51%, 32%);
+    font-weight: bold;
+}
+
+@media(max-width: 600px){
+    .main{
+        padding: 0px;
+        margin: 0px;
+        border-radius: 0px;
+        width: 100%;
+    }
+
+    .main .img{
+        padding: 0px;
+        width: 100%;
+    }
+    .main .img img{
+        border-radius: 0px;
+        padding: 0px;
+        margin: 0px;
+        width: 100%;
+    }
+    .main h1{
+        margin-left: 25px;
+        margin-right: 25px;
+    }
+    .main p{
+        margin-left: 25px;
+        margin-right: 25px;
+    }
+    .main .Time 
+    , .Ingredients
+    , .Instructions
+    , .nutrition{
+        margin-left: 25px;
+        margin-right: 25px;
+    }
+}

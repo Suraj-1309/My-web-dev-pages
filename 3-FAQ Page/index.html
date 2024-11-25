@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="body">
+    <div class="main_page">
+       <div class="heading">
+            <img src="images/icon-star.svg" alt="star">
+            <h1>FAQs</h1>
+       </div>
+       <br>
+       <br>
+
+       <div class="q1" onclick="q1()">
+        <div class="q onerow">
+            <h2>What is Front-End ? </h2>
+            <img id="img1" src="images/icon-plus.svg" alt="">
+        </div>
+        <div id="ans1" class="text-color">
+        </div>
+       </div>
+       
+       <hr>
+
+       <div class="q2" onclick="q2()">
+            <div class="q onerow">
+                <h2>What is HTML ? </h2>
+                <img id="img2" src="images/icon-plus.svg" alt="">
+            </div>
+            <div id="ans2" class="text-color"></div>
+       </div>
+
+       <hr>
+
+       <div class="q3" onclick="q3(); pd();">
+            <div class="q onerow">
+                <h2>What is CSS ? </h2>
+                <img id="img3" src="images/icon-plus.svg" alt="">
+            </div>
+            <div id="ans3" class="text-color"></div>
+       </div>
+
+       <hr>
+
+       <div class="q4" onclick="q4(); pd();">
+            <div class="q onerow">
+                <h2>What is JS ? </h2>
+                <img id="img4" src="images/icon-plus.svg" alt="">
+            </div>
+            <div id="ans4" class="text-color pd"></div>
+       </div>
+
+
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
