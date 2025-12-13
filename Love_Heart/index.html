@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinematic Cosmic Heart</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        canvas { display: block; }
+        
+        #video-container {
+            position: absolute; bottom: 20px; right: 20px; width: 180px; height: 135px;
+            border-radius: 12px; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.2);
+            z-index: 10; transform: scaleX(-1); background: #000;
+        }
+        video { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
+
+        #ui {
+            position: absolute; top: 20px; left: 20px; color: white; pointer-events: none;
+            text-shadow: 0 0 15px rgba(0,0,0,1); z-index: 5;
+        }
+        h1 { margin: 0; font-weight: 800; letter-spacing: 5px; font-size: 2.5rem; color: #fff; }
+        .controls { margin-top: 10px; font-size: 0.9rem; color: #00eaff; line-height: 1.6; text-transform: uppercase; }
+        .hint { color: #ffaa00; margin-top: 5px; font-weight: bold; }
+
+        #loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #00eaff; font-family: monospace; font-size: 1.5rem; text-align: center;
+            background: rgba(0,0,0,0.9); padding: 40px; border: 1px solid #00eaff; border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">GENERATING UNIVERSE...<br><span style="font-size:0.8rem; color:white;">(Allow Camera Access)</span></div>
+
+    <div id="ui">
+        <h1>COSMIC CORE</h1>
+        <div class="controls">
+            👋 <b>Horizontal Swipe:</b> Change Core Color<br>
+            🖐 <b>Open Hand:</b> Disperse Particles<br>
+            🤏 <b>Pinch:</b> Gravitational Collapse<br>
+            👆 <b>Move Hand:</b> Rotate core
+        </div>
+        <p class="hint">🖱 MOUSE: Zoom out to see the Black Hole & Sun</p>
+    </div>
+
+    <div id="video-container"><video id="input-video" playsinline muted autoplay></video></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/+esm"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+
+        // --- Config & State ---
+        const PARTICLE_COUNT = 18000;
+        const PALETTE = [0xff0040, 0x00eaff, 0x9d00ff, 0xffaa00, 0x00ff66, 0xffffff, 0xff00cc];
+        let paletteIndex = 0;
+        let lastHandX = 0;
+        let lastSwipeTime = 0;
+        let explosionFactor = 0;
+        let targetRotation = { x: 0, y: 0 };
+
+        let scene, camera, renderer, controls, handLandmarker, video;
+        let heartParticles, heartGeom, originalPos;
+        let sun, blackHole, planets = [];
+        let colorCore = new THREE.Color(PALETTE[0]);
+        let colorEdge = new THREE.Color(PALETTE[1]);
+
+        init();
+
+        async function init() {
+            // 1. Scene Setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
+            camera.position.set(0, 0, 80);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            document.body.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.maxDistance = 1500;
+
+            // 2. Add Lighting
+            const amb = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(amb);
+
+            // 3. Create Universe
+            createEnvironment();
+            createHeart();
+
+            // 4. AI Setup
+            try {
+                const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", delegate: "GPU" },
+                    runningMode: "VIDEO", numHands: 1
+                });
+                video = document.getElementById("input-video");
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.addEventListener("loadeddata", () => {
+                    document.getElementById('loading').style.display = 'none';
+                    animate();
+                });
+            } catch (e) {
+                console.error("Camera fail", e);
+                document.getElementById('loading').innerHTML = "Camera Error. Running in Mouse Mode.";
+                setTimeout(() => document.getElementById('loading').style.display='none', 2000);
+                animate();
+            }
+        }
+
+        function createEnvironment() {
+            // Stars
+            const starGeom = new THREE.BufferGeometry();
+            const starPos = [];
+            for(let i=0; i<8000; i++) {
+                const r = 1000 + Math.random() * 1000;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                starPos.push(r*Math.sin(phi)*Math.cos(theta), r*Math.sin(phi)*Math.sin(theta), r*Math.cos(phi));
+            }
+            starGeom.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+            scene.add(new THREE.Points(starGeom, new THREE.PointsMaterial({color: 0xffffff, size: 0.7})));
+
+            // The Sun
+            const sunGeom = new THREE.SphereGeometry(40, 32, 32);
+            const sunMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+            sun = new THREE.Mesh(sunGeom, sunMat);
+            sun.position.set(600, 200, -800);
+            scene.add(sun);
+            const sunLight = new THREE.PointLight(0xffaa00, 1000000, 3000);
+            sunLight.position.copy(sun.position);
+            scene.add(sunLight);
+
+            // Black Hole
+            const bhGroup = new THREE.Group();
+            const holeGeom = new THREE.SphereGeometry(30, 32, 32);
+            const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const hole = new THREE.Mesh(holeGeom, holeMat);
+            bhGroup.add(hole);
+
+            const ringGeom = new THREE.TorusGeometry(50, 15, 2, 100);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
+            const ring = new THREE.Mesh(ringGeom, ringMat);
+            ring.rotation.x = Math.PI/2.5;
+            bhGroup.add(ring);
+            
+            bhGroup.position.set(-600, -100, -500);
+            scene.add(bhGroup);
+            blackHole = bhGroup;
+
+            // Planets
+            for(let i=0; i<12; i++) {
+                const pGeom = new THREE.SphereGeometry(5 + Math.random()*10, 32, 32);
+                const pMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.5, 0.4), roughness: 0.8 });
+                const p = new THREE.Mesh(pGeom, pMat);
+                p.position.set((Math.random()-0.5)*800, (Math.random()-0.5)*400, (Math.random()-0.5)*800);
+                scene.add(p);
+                planets.push(p);
+            }
+        }
+
+        function createHeart() {
+            heartGeom = new THREE.BufferGeometry();
+            originalPos = new Float32Array(PARTICLE_COUNT * 3);
+            const currentPos = new Float32Array(PARTICLE_COUNT * 3);
+            const colors = new Float32Array(PARTICLE_COUNT * 3);
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const t = Math.random() * Math.PI * 2;
+                const r = Math.pow(Math.random(), 0.5); 
+                let x = 16 * Math.pow(Math.sin(t), 3);
+                let y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+                let z = (Math.random() - 0.5) * 8;
+                
+                originalPos[i*3] = x * r; originalPos[i*3+1] = y * r; originalPos[i*3+2] = z * r;
+                currentPos[i*3] = originalPos[i*3]; currentPos[i*3+1] = originalPos[i*3+1]; currentPos[i*3+2] = originalPos[i*3+2];
+            }
+            heartGeom.setAttribute('position', new THREE.BufferAttribute(currentPos, 3));
+            heartGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(16,16,0,16,16,16);
+            grad.addColorStop(0, 'white'); grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad; ctx.fillRect(0,0,32,32);
+
+            heartParticles = new THREE.Points(heartGeom, new THREE.PointsMaterial({
+                size: 0.6, map: new THREE.CanvasTexture(canvas), vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
+            }));
+            scene.add(heartParticles);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = performance.now() * 0.001;
+            controls.update();
+
+            // Hand Tracking
+            if (handLandmarker && video.readyState >= 2) {
+                const results = handLandmarker.detectForVideo(video, performance.now());
+                if (results.landmarks && results.landmarks.length > 0) {
+                    const hand = results.landmarks[0];
+                    const index = hand[8];
+                    const thumb = hand[4];
+
+                    // Swipe logic
+                    const dx = index.x - lastHandX;
+                    if (Math.abs(dx) > 0.15 && (performance.now() - lastSwipeTime > 600)) {
+                        paletteIndex = (paletteIndex + 1) % PALETTE.length;
+                        colorCore.setHex(PALETTE[paletteIndex]);
+                        colorEdge.setHex(PALETTE[(paletteIndex + 1) % PALETTE.length]);
+                        lastSwipeTime = performance.now();
+                    }
+                    lastHandX = index.x;
+
+                    // Morphing
+                    const pinch = Math.hypot(index.x - thumb.x, index.y - thumb.y);
+                    explosionFactor = THREE.MathUtils.lerp(explosionFactor, THREE.MathUtils.mapLinear(pinch, 0.05, 0.3, -0.5, 1.5), 0.1);
+                    
+                    targetRotation.x = (index.y - 0.5) * 2;
+                    targetRotation.y = -(index.x - 0.5) * 2;
+                } else {
+                    explosionFactor = THREE.MathUtils.lerp(explosionFactor, 0, 0.05);
+                }
+            }
+
+            // Particle Physics
+            const pos = heartGeom.attributes.position.array;
+            const cols = heartGeom.attributes.color.array;
+            const beat = 1 + Math.sin(time * 3) * 0.05 * (1 - explosionFactor);
+
+            for(let i=0; i<PARTICLE_COUNT; i++) {
+                const i3 = i * 3;
+                const tx = originalPos[i3] * beat;
+                const ty = originalPos[i3+1] * beat;
+                const tz = originalPos[i3+2] * beat;
+
+                const factor = 1 + explosionFactor * 5;
+                pos[i3] += (tx * factor - pos[i3]) * 0.1;
+                pos[i3+1] += (ty * factor - pos[i3+1]) * 0.1;
+                pos[i3+2] += (tz * factor - pos[i3+2]) * 0.1;
+
+                const c = colorCore.clone().lerp(colorEdge, Math.abs(originalPos[i3])/15);
+                cols[i3] = c.r; cols[i3+1] = c.g; cols[i3+2] = c.b;
+            }
+            heartGeom.attributes.position.needsUpdate = true;
+            heartGeom.attributes.color.needsUpdate = true;
+            heartParticles.rotation.x += (targetRotation.x - heartParticles.rotation.x) * 0.05;
+            heartParticles.rotation.y += (targetRotation.y - heartParticles.rotation.y) * 0.05;
+
+            // Background movement
+            blackHole.rotation.y += 0.01;
+            planets.forEach((p, i) => { p.position.y += Math.sin(time + i) * 0.1; p.rotation.y += 0.01; });
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

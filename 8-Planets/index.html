@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planets Facts</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="tabs">
+      <h2 id="tabs-title">Planets</h2>
+      <div role="tablist" aria-labelledby="tabs-title">
+        <button role="tab" aria-controls="panel-earth" aria-selected="true" id="tab-earth">🌍 Earth</button>
+        <button role="tab" aria-controls="panel-saturn" aria-selected="false" id="tab-saturn">🪐 Saturn</button>
+        <button role="tab" aria-controls="panel-mars" aria-selected="false" id="tab-mars">🔴 Mars</button>
+        <button role="tab" aria-controls="panel-mercury" aria-selected="false" id="tab-mercury">⚪ Mercury</button>
+        <button role="tab" aria-controls="panel-venus" aria-selected="false" id="tab-venus">🟠 Venus</button>
+        <button role="tab" aria-controls="panel-jupiter" aria-selected="false" id="tab-jupiter">🟢 Jupiter</button>
+        <button role="tab" aria-controls="panel-uranus" aria-selected="false" id="tab-uranus">🟤 Uranus</button>
+        <button role="tab" aria-controls="panel-neptune" aria-selected="false" id="tab-neptune">🔵 Neptune</button>
+      </div>
+
+      <div id="panel-earth" role="tabpanel" aria-labelledby="tab-earth">
+        <p>
+          Earth is our home planet, known for its abundant water, diverse ecosystems, and life-supporting atmosphere. It's the only planet in the solar system known to harbor life.
+        </p>
+      </div>
+      <div id="panel-saturn" role="tabpanel" aria-labelledby="tab-saturn" hidden>
+        <p>
+          Saturn is famous for its beautiful and extensive ring system made of ice and rock particles. It's a gas giant with dozens of moons orbiting it.
+        </p>
+      </div>
+      <div id="panel-mars" role="tabpanel" aria-labelledby="tab-mars" hidden>
+        <p>
+          Mars, the red planet, is a rocky world with the tallest volcano and deepest canyon in the solar system. It's a key focus for exploration in the search for past or present life.
+        </p>
+      </div>
+    </div>
+    <div id="panel-mercury" role="tabpanel" aria-labelledby="tab-mercury" hidden>
+        <p>
+            Mercury is the smallest planet and closest to the Sun. It has no atmosphere to retain heat, giving it extreme temperature changes.
+        </p>
+    </div>
+
+    <div id="panel-venus" role="tabpanel" aria-labelledby="tab-venus" hidden>
+        <p>
+            Venus is Earth's “sister planet” in size but has a thick toxic atmosphere and runaway greenhouse effect, making it the hottest planet.
+        </p>
+    </div>
+
+    <div id="panel-jupiter" role="tabpanel" aria-labelledby="tab-jupiter" hidden>
+        <p>
+            Jupiter is the largest planet in the solar system. This gas giant is known for its Great Red Spot, a massive storm persisting for centuries.
+        </p>
+    </div>
+
+    <div id="panel-uranus" role="tabpanel" aria-labelledby="tab-uranus" hidden>
+        <p>
+            Uranus is an ice giant tilted on its side, giving it extreme seasons. Its atmosphere contains methane, giving it a pale blue color.
+        </p>
+    </div>
+
+    <div id="panel-neptune" role="tabpanel" aria-labelledby="tab-neptune" hidden>
+        <p>
+            Neptune, another ice giant, is known for its deep blue color and incredibly strong winds—the fastest in the solar system.
+        </p>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
